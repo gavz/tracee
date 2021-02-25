@@ -2,6 +2,7 @@ TARGET := self
 TARGET_BPF := $(TARGET).bpf.o
 
 GO_SRC := $(shell find . -type f -name '*.go')
+LIBBPFGO_SRC := $(shell find ../.. -type f -name '*.go')
 BPF_SRC := $(shell find . -type f -name '*.bpf.c')
 PWD := $(shell pwd)
 
@@ -15,11 +16,9 @@ vmlinux.h:
 	bpftool btf dump file /sys/kernel/btf/vmlinux format c > vmlinux.h
 
 go_env := CC=gcc CGO_CFLAGS="-I $(LIBBPF_HEADERS)" CGO_LDFLAGS="$(LIBBPF_OBJ)"
-.PHONY: $(TARGET)
-$(TARGET): $(GO_SRC)
+$(TARGET): $(GO_SRC) $(LIBBPFGO_SRC)
 	$(go_env) go build -ldflags '-extldflags "-static"' -o $(TARGET) 
 
-.PHONY: $(TARGET_BPF)
 $(TARGET_BPF): $(BPF_SRC)
 	clang \
 		-g -O2 -c -target bpf \
